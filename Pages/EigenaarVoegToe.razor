@@ -1,0 +1,117 @@
+﻿@page "/eigenaarvoegtoe"
+@inject IConfiguration Configuration
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@using static WASM.Shared.Eigenaar
+@using static WASM.Shared.Fout
+@using static WASM.Shared.Inhoud
+
+<h3>Eigenaar Toevoegen</h3>
+<div>@resultaat</div>
+<br />
+
+<EditForm Model="@eigenaar" OnSubmit="Opslaan" style="width:90%">
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label class="col=sm-2 col-form-label">ID</label>
+        </div>
+        <div class="col-sm-10">
+            @ID
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label for="Omschrijving" class="col=sm-2 col-form-label">Omschrijving</label>
+        </div>
+        <div class="col-sm-10">
+            <InputText id="Omschrijving" @bind-Value="eigenaar!.Omschrijving " class="form-control" placeholder="Geef een omschrijving voor de eigenaar..." />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label for="" class="col=sm-2 col-form-label">Voornaam</label>
+        </div>
+        <div class="col-sm-10">
+            <InputText id="Voornaam" @bind-Value="eigenaar!.Voornaam" class="form-control" placeholder="De voornaam van de eigenaar..." />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label for="" class="col=sm-2 col-form-label">Achternaam</label>
+        </div>
+        <div class="col-sm-10">
+            <InputText id="Achternaam" @bind-Value="eigenaar!.Achternaam" class="form-control" placeholder="De achternaam van de eigenaar..." />
+        </div>
+    </div>
+
+    <div class="form-group row">
+        <div class="col-sm-2">
+            <label for="" class="col=sm-2 col-form-label">Regio</label>
+        </div>
+        <div class="col-sm-10">
+            <InputText id="Regio" @bind-Value="eigenaar!.Regio" class="form-control" placeholder="De regio van de eigenaar..." />
+        </div>
+    </div>
+    <br />
+
+    <div class="form-group row">
+        <button type="submit" class="btn btn-primary" style="width:120px">Opslaan</button>&nbsp;
+        <button type="button" class="btn btn-secondary" style="width:120px" @onclick="(() => Terug())">Terug</button>&nbsp;
+    </div>
+</EditForm>
+
+@code {
+    private int? ID = 0;
+    private EIGENAAR? eigenaar = new EIGENAAR();
+    string? resultaat;
+    Fout? fout = new Fout();
+    Inhoud? inhoud = new Inhoud();
+
+    private async Task Opslaan()
+    {
+        if (ID == 0)
+        {
+            if (eigenaar is not null)
+            {
+                var opgeslagen = await httpClient.PostAsJsonAsync<EIGENAAR>(Configuration["apiLocatie"] + "/VoegToe", eigenaar);
+                if (!opgeslagen.IsSuccessStatusCode)
+                {
+                    fout = await opgeslagen.Content.ReadFromJsonAsync<Fout>();
+                    if (fout is not null && fout.Detail is not null)
+                    {
+                        resultaat = "De gegevens van de eigenaar kunnen niet opgeslagen worden. " +
+                            fout.Detail.ToString() + " (" + opgeslagen.StatusCode + ")";
+                    }
+                }
+                else
+                {
+                    if (opgeslagen is not null)
+                    {
+                        eigenaar = await opgeslagen.Content.ReadFromJsonAsync<EIGENAAR?>();
+                        if (eigenaar is not null)
+                        {
+
+
+                            ID = eigenaar.ID;
+                            resultaat = DateTime.Now + " " + eigenaar.Voornaam + " " + eigenaar.Achternaam +
+                                " is geregistreerd onder ID " + eigenaar.ID + ".";
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            resultaat = "De eigenaar is al toegevoegd.";
+        }
+    }
+
+    private void Terug()
+    {
+        navigationManager.NavigateTo($"/eigenaren");
+    }
+
+}

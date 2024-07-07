@@ -1,0 +1,31 @@
+﻿@page "/counter"
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p role="status">Current count: @currentCount</p>
+
+<p><button class="btn btn-primary" @onclick="IncrementCount">Click me</button></p>
+
+<p>@AllowedHosts</p>
+
+@code {
+
+    private int currentCount = 0;
+    private string AllowedHosts = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllowedHosts = Configuration["apiLocatie"];
+        await Task.Delay(0);
+    }
+    
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+}
